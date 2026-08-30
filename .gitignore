@@ -1,0 +1,19 @@
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# エディタ
+.vscode/
+.idea/
+*.swp
+
+# ツール類（このプロジェクトはビルド不要なので基本的に発生しません）
+node_modules/
+npm-debug.log*
+.cache/
+dist/
+
+# ローカルの開発補助設定
+.claude/

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0f1225">
+<meta name="description" content="せり上がる土台と、消えた列の下へブロックが崩れ落ちる連鎖ルールを持つ落ちものパズル。">
+<title>BLOCK RISE — せり上がり落ちものパズル</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <header id="topbar">
+    <h1 class="logo">BLOCK<span>RISE</span></h1>
+    <div class="topbar-actions">
+      <button id="btn-sound" class="icon-btn" type="button" aria-label="サウンド切り替え">♪</button>
+      <button id="btn-pause" class="icon-btn" type="button" aria-label="一時停止">II</button>
+      <button id="btn-help"  class="icon-btn" type="button" aria-label="遊び方">?</button>
+    </div>
+  </header>
+
+  <main id="stage">
+
+    <section id="board-area">
+      <div id="rise-meter" title="せり上がりまでの残り時間">
+        <div id="rise-fill"></div>
+        <span id="rise-label">RISE</span>
+      </div>
+
+      <div id="board-wrap">
+        <canvas id="board"></canvas>
+
+        <div id="overlay" class="overlay show" data-screen="title">
+          <div class="overlay-card">
+            <h2 id="ov-title">BLOCK RISE</h2>
+            <p id="ov-text">土台がせり上がる落ちものパズル。<br>列をそろえて消し、崩れ落ちるブロックで連鎖を狙え。</p>
+            <p id="ov-score" class="ov-score"></p>
+            <button id="ov-button" class="primary-btn" type="button">ゲーム開始</button>
+            <button id="ov-help-btn" class="ghost-btn" type="button">遊び方を見る</button>
+          </div>
+        </div>
+
+        <div id="toast" class="toast"></div>
+      </div>
+    </section>
+
+    <aside id="panel">
+      <div class="panel-row">
+        <div class="panel-box">
+          <h2>HOLD</h2>
+          <canvas id="hold-canvas"></canvas>
+        </div>
+        <div class="panel-box">
+          <h2>NEXT</h2>
+          <canvas id="next-canvas"></canvas>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat stat-main">
+          <span class="stat-label">SCORE</span>
+          <span class="stat-value" id="st-score">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">BEST</span>
+          <span class="stat-value" id="st-best">0</span>
+        </div>
+        <div class="stat-grid">
+          <div class="stat"><span class="stat-label">LEVEL</span><span class="stat-value" id="st-level">1</span></div>
+          <div class="stat"><span class="stat-label">LINES</span><span class="stat-value" id="st-lines">0</span></div>
+          <div class="stat"><span class="stat-label">COMBO</span><span class="stat-value" id="st-combo">0</span></div>
+          <div class="stat"><span class="stat-label">CHAIN</span><span class="stat-value" id="st-chain">0</span></div>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+  <div id="touch-controls">
+    <button class="pad-btn" data-act="left"     type="button" aria-label="左へ移動">◀</button>
+    <button class="pad-btn" data-act="rotate"   type="button" aria-label="回転">⟳</button>
+    <button class="pad-btn" data-act="right"    type="button" aria-label="右へ移動">▶</button>
+    <button class="pad-btn" data-act="soft"     type="button" aria-label="ソフトドロップ">▼</button>
+    <button class="pad-btn" data-act="hard"     type="button" aria-label="ハードドロップ">⤓</button>
+    <button class="pad-btn" data-act="hold"     type="button" aria-label="ホールド">H</button>
+  </div>
+
+  <div id="help" class="overlay" hidden>
+    <div class="overlay-card help-card">
+      <h2>遊び方</h2>
+      <h3>ルール</h3>
+      <ul>
+        <li>上から降ってくるブロックを積み、<b>横一列をそろえると消えます</b>。</li>
+        <li><b>土台が時間とともにせり上がります。</b>盤面上部のバーが空になるとせり上がり発生。レベルが上がるほど間隔が短くなります。</li>
+        <li><b>最後に置いたブロックの落下：</b>列が消えたあと、そのピースの残ったマスは<b>形が崩れてバラバラに</b>真下へ落ち、下の隙間を埋めます。埋めた結果また列がそろえば<b>連鎖</b>！</li>
+        <li>ブロックが天井に届くとゲームオーバーです。</li>
+      </ul>
+      <h3>キーボード操作</h3>
+      <ul class="keys">
+        <li><kbd>←</kbd><kbd>→</kbd> 移動</li>
+        <li><kbd>↓</kbd> ソフトドロップ</li>
+        <li><kbd>↑</kbd> / <kbd>X</kbd> 右回転</li>
+        <li><kbd>Z</kbd> 左回転</li>
+        <li><kbd>Space</kbd> ハードドロップ</li>
+        <li><kbd>C</kbd> / <kbd>Shift</kbd> ホールド</li>
+        <li><kbd>P</kbd> 一時停止 / <kbd>R</kbd> リスタート</li>
+      </ul>
+      <h3>スマホ操作</h3>
+      <ul>
+        <li>盤面を左右にドラッグ → 移動 ／ タップ → 回転</li>
+        <li>下へ素早くフリック → ハードドロップ ／ ゆっくり下ドラッグ → ソフトドロップ</li>
+        <li>上へスワイプ → ホールド ／ 画面下のボタンでも操作できます</li>
+      </ul>
+      <button id="help-close" class="primary-btn" type="button">閉じる</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/pieces.js"></script>
+<script src="js/board.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/render.js"></script>
+<script src="js/input.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
