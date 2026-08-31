@@ -10,6 +10,7 @@
   var act = null;                 // game.js から渡されるアクション群
   var state = { left: false, right: false, softDrop: false };
   var lastDir = 0, dasTimer = 0, arrTimer = 0;
+  var zones = null;               // 盤面左右の操作エリア
 
   function fire(name) {
     BB.Audio.unlock();
@@ -69,6 +70,7 @@
     HELD = {};
     state.left = state.right = state.softDrop = false;
     lastDir = 0;
+    if (zones) Array.prototype.forEach.call(zones, function (z) { z.classList.remove('active'); });
   }
 
   /* DAS / ARR。毎フレーム game.js から呼ばれる。 */
@@ -106,7 +108,8 @@
     canvas.addEventListener('pointerdown', function (e) {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       BB.Audio.unlock();
-      canvas.setPointerCapture(e.pointerId);
+      // 捕捉に失敗しても操作自体は続けられるようにしておく
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* 無視 */ }
       touch = {
         id: e.pointerId,
         x0: e.clientX, y0: e.clientY,
@@ -172,34 +175,48 @@
     canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   }
 
-  /* ---------- 画面下の操作ボタン ---------- */
+  /* ---------- 押しっぱなしに対応した操作ボタン ---------- */
+
+  /* 画面下のボタンと、盤面左右の操作エリアで共通して使う。
+   * left / right / soft は押している間ずっと有効（横移動は DAS/ARR で連続移動）。 */
+  function bindHoldControl(el, a, activeClass) {
+    el.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      BB.Audio.unlock();
+      try { el.setPointerCapture(e.pointerId); } catch (err) { /* 未対応環境は無視 */ }
+      if (activeClass) el.classList.add(activeClass);
+
+      if (a === 'left') state.left = true;
+      else if (a === 'right') state.right = true;
+      else if (a === 'soft') state.softDrop = true;
+      else if (a === 'rotate') fire('rotateCW');
+      else if (a === 'hard') fire('hardDrop');
+      else if (a === 'hold') fire('hold');
+    });
+
+    function release(e) {
+      if (e) e.preventDefault();
+      if (activeClass) el.classList.remove(activeClass);
+      if (a === 'left') state.left = false;
+      else if (a === 'right') state.right = false;
+      else if (a === 'soft') state.softDrop = false;
+    }
+    el.addEventListener('pointerup', release);
+    el.addEventListener('pointercancel', release);
+    el.addEventListener('pointerleave', release);
+  }
 
   function bindPad(root) {
-    var btns = root.querySelectorAll('.pad-btn');
-    Array.prototype.forEach.call(btns, function (btn) {
-      var a = btn.getAttribute('data-act');
+    Array.prototype.forEach.call(root.querySelectorAll('.pad-btn'), function (btn) {
+      bindHoldControl(btn, btn.getAttribute('data-act'), null);
+    });
+  }
 
-      btn.addEventListener('pointerdown', function (e) {
-        e.preventDefault();
-        BB.Audio.unlock();
-        btn.setPointerCapture(e.pointerId);
-        if (a === 'left') state.left = true;
-        else if (a === 'right') state.right = true;
-        else if (a === 'soft') state.softDrop = true;
-        else if (a === 'rotate') fire('rotateCW');
-        else if (a === 'hard') fire('hardDrop');
-        else if (a === 'hold') fire('hold');
-      });
-
-      function release(e) {
-        if (e) e.preventDefault();
-        if (a === 'left') state.left = false;
-        else if (a === 'right') state.right = false;
-        else if (a === 'soft') state.softDrop = false;
-      }
-      btn.addEventListener('pointerup', release);
-      btn.addEventListener('pointercancel', release);
-      btn.addEventListener('pointerleave', release);
+  /* 盤面の左右の操作エリア */
+  function bindSideZones() {
+    zones = document.querySelectorAll('.side-zone');
+    Array.prototype.forEach.call(zones, function (z) {
+      bindHoldControl(z, z.getAttribute('data-act'), 'active');
     });
   }
 
@@ -210,6 +227,7 @@
     global.addEventListener('blur', onBlur);
     bindBoardGestures(document.getElementById('board'));
     bindPad(document.getElementById('touch-controls'));
+    bindSideZones();
   }
 
   BB.Input = {

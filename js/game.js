@@ -28,7 +28,7 @@
     score: 0, best: 0, level: 1, lines: 0, combo: 0, chain: 0,
     clearedThisLock: false,
 
-    gravityTimer: 0, lockTimer: 0, lockResets: 0,
+    gravityTimer: 0, lockTimer: 0, lockResets: 0, softActive: false,
 
     riseTimer: 0, riseInterval: 0, pendingRiseRow: null,
     riseOverride: 0, warnPlayed: false,
@@ -389,11 +389,20 @@
     // 自然落下 ＋ ソフトドロップ
     var soft = BB.Input.state.softDrop;
     var interval = C.gravityFor(G.level);
-    if (soft) interval = Math.max(0.004, interval / C.SOFT_DROP_MULT);
+    if (soft) interval = Math.min(interval, C.SOFT_DROP_INTERVAL);
+
+    // ソフトドロップの入り／切りでは、たまっていた落下タイマーを捨てる。
+    // 持ち越すと、間隔が一気に短くなった瞬間に貯金ぶんがまとめて消費され、
+    // 1 フレームで何マスも落ちてしまう。
+    if (soft !== G.softActive) {
+      G.softActive = soft;
+      G.gravityTimer = 0;
+    }
 
     G.gravityTimer += dt;
     var guard = 0;
-    while (G.gravityTimer >= interval && guard++ < 24) {
+    var maxSteps = soft ? C.SOFT_DROP_MAX_STEPS : 24;
+    while (G.gravityTimer >= interval && guard++ < maxSteps) {
       G.gravityTimer -= interval;
       if (tryMove(0, 1)) {
         if (soft) G.score += C.SCORE_SOFT;
@@ -477,7 +486,7 @@
     G.canHold = true;
     G.score = 0; G.level = 1; G.lines = 0; G.combo = 0; G.chain = 0;
     G.clearedThisLock = false;
-    G.gravityTimer = 0; G.lockTimer = 0; G.lockResets = 0;
+    G.gravityTimer = 0; G.lockTimer = 0; G.lockResets = 0; G.softActive = false;
     G.clearingRows = []; G.clearT = 0;
     G.fallAnims = []; G.fallT = 0; G.fallDur = 0;
     G.lastCells = []; G.spawnT = 0; G.time = 0;
@@ -654,6 +663,16 @@
       return { x: G.piece.x, y: G.piece.y, rot: G.piece.rot };
     },
     drop: function () { hardDrop(); return G.phase; },
+    /* ゲームループを手動で進める。requestAnimationFrame に頼らず、
+     * 決まった時間ぶんだけ進めて挙動を確かめたいときに使う。
+     *   BB.debug.step(1.0)        → 1 秒ぶん進める（1/60 秒刻み）
+     *   BB.debug.step(1.0, 1/120) → 刻み幅を指定 */
+    step: function (seconds, slice) {
+      var dt = slice || (1 / 60);
+      var n = Math.max(1, Math.round((seconds || dt) / dt));
+      for (var i = 0; i < n; i++) update(dt);
+      return BB.debug.state();
+    },
     forceRise: function () { doRise(); return BB.debug.dump(); },
     setRiseInterval: function (sec) { G.riseOverride = sec || 0; resetRiseTimer(); return currentRiseInterval(); },
     pauseTimers: function () { G.riseOverride = 99999; resetRiseTimer(); },

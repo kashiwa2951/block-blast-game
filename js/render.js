@@ -79,6 +79,12 @@
 
   /* ---------- サイズ調整 ---------- */
 
+  /* 盤面の左右に操作エリアを出すレイアウトかどうか（CSS のメディアクエリと同じ条件） */
+  function isTouchLayout() {
+    return !!(global.matchMedia &&
+      global.matchMedia('(max-width: 720px), (pointer: coarse)').matches);
+  }
+
   function fitBoard() {
     if (!wrapEl) return;
     dpr = Math.min(global.devicePixelRatio || 1, 2.5);
@@ -87,7 +93,13 @@
     var availW = wrapEl.clientWidth || (global.innerWidth * 0.9);
     var availH = wrapEl.clientHeight || (global.innerHeight * 0.6);
 
-    var s = Math.floor(Math.min(availW / C.COLS, availH / C.VISIBLE_ROWS));
+    // タッチ操作時は、盤面の左右に操作エリアぶんの余白を確保する
+    var gutter = isTouchLayout()
+      ? Math.max(C.TOUCH_GUTTER_MIN, Math.min(C.TOUCH_GUTTER_MAX, availW * C.TOUCH_GUTTER_RATIO))
+      : 0;
+    var usableW = Math.max(C.COLS * 6, availW - gutter * 2);
+
+    var s = Math.floor(Math.min(usableW / C.COLS, availH / C.VISIBLE_ROWS));
     s = Math.max(6, s);
     cell = s;
 

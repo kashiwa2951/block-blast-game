@@ -29,7 +29,12 @@
       </div>
 
       <div id="board-wrap">
+        <!-- 盤面の左右にある操作エリア。指がブロックに重ならないようにするためのもの -->
+        <div class="side-zone" id="zone-left" data-act="left" aria-hidden="true"><span>◀</span></div>
+
         <canvas id="board"></canvas>
+
+        <div class="side-zone" id="zone-right" data-act="right" aria-hidden="true"><span>▶</span></div>
 
         <div id="overlay" class="overlay show" data-screen="title">
           <div class="overlay-card">
@@ -108,7 +113,9 @@
       </ul>
       <h3>スマホ操作</h3>
       <ul>
-        <li>盤面を左右にドラッグ → 移動 ／ タップ → 回転</li>
+        <li><b>盤面の左右にある ◀ ▶ のエリアを押す → 移動。</b>押しっぱなしで連続移動します。
+          盤面に指が重ならないので、ブロックを見ながら操作できます。</li>
+        <li>盤面をタップ → 回転 ／ 盤面を左右にドラッグ → 移動</li>
         <li>下へ素早くフリック → ハードドロップ ／ ゆっくり下ドラッグ → ソフトドロップ</li>
         <li>上へスワイプ → ホールド ／ 画面下のボタンでも操作できます</li>
       </ul>
