@@ -79,7 +79,7 @@
 
   /* ---------- サイズ調整 ---------- */
 
-  /* 盤面の左右に操作エリアを出すレイアウトかどうか（CSS のメディアクエリと同じ条件） */
+  /* 盤面の左右にタッチ操作用の余白を取るレイアウトかどうか */
   function isTouchLayout() {
     return !!(global.matchMedia &&
       global.matchMedia('(max-width: 720px), (pointer: coarse)').matches);
@@ -93,7 +93,7 @@
     var availW = wrapEl.clientWidth || (global.innerWidth * 0.9);
     var availH = wrapEl.clientHeight || (global.innerHeight * 0.6);
 
-    // タッチ操作時は、盤面の左右に操作エリアぶんの余白を確保する
+    // タッチ操作時は、盤面の左右に指を置くための余白を確保する
     var gutter = isTouchLayout()
       ? Math.max(C.TOUCH_GUTTER_MIN, Math.min(C.TOUCH_GUTTER_MAX, availW * C.TOUCH_GUTTER_RATIO))
       : 0;

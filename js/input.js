@@ -10,7 +10,6 @@
   var act = null;                 // game.js から渡されるアクション群
   var state = { left: false, right: false, softDrop: false };
   var lastDir = 0, dasTimer = 0, arrTimer = 0;
-  var zones = null;               // 盤面左右の操作エリア
 
   function fire(name) {
     BB.Audio.unlock();
@@ -70,7 +69,7 @@
     HELD = {};
     state.left = state.right = state.softDrop = false;
     lastDir = 0;
-    if (zones) Array.prototype.forEach.call(zones, function (z) { z.classList.remove('active'); });
+    touch = null;
   }
 
   /* DAS / ARR。毎フレーム game.js から呼ばれる。 */
@@ -104,12 +103,16 @@
 
   var touch = null;
 
-  function bindBoardGestures(canvas) {
-    canvas.addEventListener('pointerdown', function (e) {
+  /* 盤面のジェスチャ。受付範囲は盤面そのものではなく、その外側の余白を含む枠全体。
+   * 盤面の左右を触っても操作できるので、指でブロックが隠れない。 */
+  function bindBoardGestures(surface) {
+    surface.addEventListener('pointerdown', function (e) {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
+      // タイトル／一時停止／ゲームオーバーの画面が出ているときは、そちらの操作を優先
+      if (e.target && e.target.closest && e.target.closest('.overlay')) return;
       BB.Audio.unlock();
       // 捕捉に失敗しても操作自体は続けられるようにしておく
-      try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* 無視 */ }
+      try { surface.setPointerCapture(e.pointerId); } catch (err) { /* 無視 */ }
       touch = {
         id: e.pointerId,
         x0: e.clientX, y0: e.clientY,
@@ -119,7 +122,7 @@
       };
     });
 
-    canvas.addEventListener('pointermove', function (e) {
+    surface.addEventListener('pointermove', function (e) {
       if (!touch || e.pointerId !== touch.id) return;
       e.preventDefault();
 
@@ -168,11 +171,11 @@
       touch = null;
     }
 
-    canvas.addEventListener('pointerup', endTouch);
-    canvas.addEventListener('pointercancel', function (e) {
+    surface.addEventListener('pointerup', endTouch);
+    surface.addEventListener('pointercancel', function (e) {
       if (touch && e.pointerId === touch.id) { state.softDrop = false; touch = null; }
     });
-    canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    surface.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   }
 
   /* ---------- 押しっぱなしに対応した操作ボタン ---------- */
@@ -212,22 +215,13 @@
     });
   }
 
-  /* 盤面の左右の操作エリア */
-  function bindSideZones() {
-    zones = document.querySelectorAll('.side-zone');
-    Array.prototype.forEach.call(zones, function (z) {
-      bindHoldControl(z, z.getAttribute('data-act'), 'active');
-    });
-  }
-
   function init(actions) {
     act = actions;
     global.addEventListener('keydown', onKeyDown);
     global.addEventListener('keyup', onKeyUp);
     global.addEventListener('blur', onBlur);
-    bindBoardGestures(document.getElementById('board'));
+    bindBoardGestures(document.getElementById('board-wrap'));
     bindPad(document.getElementById('touch-controls'));
-    bindSideZones();
   }
 
   BB.Input = {

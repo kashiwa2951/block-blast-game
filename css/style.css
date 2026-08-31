@@ -149,44 +149,19 @@ body {
   pointer-events: none;
 }
 
+/* タッチ操作の受付範囲。盤面そのものではなく、この枠全体で受け付ける。
+   盤面の左右の余白を触って操作できるので、指でブロックが隠れない。 */
 #board-wrap {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   width: 100%;
   overflow: hidden;   /* 極端に低いウィンドウでも外へはみ出さない */
-}
-
-/* 盤面の左右にある操作エリア。
-   タッチ端末でのみ表示し、押している間その方向へ移動し続ける。
-   盤面の上を指でなぞらずに操作できるので、ブロックが見えなくならない。 */
-.side-zone {
-  display: none;
-  flex: 1 1 0;
-  min-width: 0;
-  align-self: stretch;
-  place-items: center;
-  border-radius: var(--radius);
-  color: rgba(200, 212, 255, .26);
-  font-size: clamp(16px, 5vw, 26px);
-  line-height: 1;
+  touch-action: none; /* スワイプでページが動かないようにする */
   user-select: none;
   -webkit-user-select: none;
-  touch-action: none;
-  cursor: pointer;
-  transition: background .1s ease, color .1s ease;
-}
-.side-zone span { pointer-events: none; }
-.side-zone.active {
-  background: rgba(124, 92, 255, .20);
-  color: rgba(232, 236, 255, .9);
-}
-
-@media (max-width: 720px), (pointer: coarse) {
-  .side-zone { display: grid; }
 }
 
 #board {
