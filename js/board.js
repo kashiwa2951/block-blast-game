@@ -27,6 +27,8 @@
     this.grid = [];
     for (var r = 0; r < this.rows; r++) this.grid.push(emptyRow(this.cols));
     this.lastHoles = null;
+    this.currentHoles = null;   // いま続けている穴の位置
+    this.holeStreak = 0;        // その位置をあと何行続けるか
   };
 
   Board.prototype.get = function (r, c) {
@@ -138,8 +140,8 @@
 
   /* --- せり上がり --- */
 
-  /* 穴あきのせり上がり行を作る。前回の穴と完全に同じにはならないようにする。 */
-  Board.prototype.makeRiseRow = function () {
+  /* 穴の位置をランダムに選ぶ。avoid と完全に同じ組み合わせは避ける。 */
+  Board.prototype.pickHoles = function (avoid) {
     var cols = this.cols;
     var holeCount = C.RISE_HOLE_MIN +
       Math.floor(Math.random() * (C.RISE_HOLE_MAX - C.RISE_HOLE_MIN + 1));
@@ -154,8 +156,28 @@
       }
       holes = pool.slice(0, holeCount).sort(function (a, b) { return a - b; });
       attempts++;
-    } while (attempts < 24 && this.lastHoles && sameHoles(holes, this.lastHoles));
+    } while (attempts < 24 && avoid && sameHoles(holes, avoid));
 
+    return holes;
+  };
+
+  /* 穴あきのせり上がり行を作る。
+   *
+   * 穴の位置は毎行ずらすのではなく、同じ位置を最低 RISE_SAME_HOLE_MIN 行ぶん続ける。
+   * こうすることで、その列に落とし込めばせり上がった行をまとめて消せるようになる。
+   * 続く行数を使い切ったら、前とは別の位置に穴を移す。
+   */
+  Board.prototype.makeRiseRow = function () {
+    var cols = this.cols;
+
+    if (this.holeStreak <= 0 || !this.currentHoles) {
+      this.currentHoles = this.pickHoles(this.currentHoles);
+      var span = C.RISE_SAME_HOLE_MAX - C.RISE_SAME_HOLE_MIN + 1;
+      this.holeStreak = C.RISE_SAME_HOLE_MIN + Math.floor(Math.random() * Math.max(1, span));
+    }
+    this.holeStreak--;
+
+    var holes = this.currentHoles;
     this.lastHoles = holes;
 
     var row = emptyRow(cols);

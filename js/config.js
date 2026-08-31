@@ -43,6 +43,8 @@
     RISE_WARN: 4.0,         // 残りこの秒数から警告表示
     RISE_HOLE_MIN: 1,       // せり上がる行に空ける穴の数（最小）
     RISE_HOLE_MAX: 2,       // 同（最大）
+    RISE_SAME_HOLE_MIN: 2,  // 同じ穴の位置を続ける行数（最小）※2 以上でまとめて消せる
+    RISE_SAME_HOLE_MAX: 3,  // 同（最大）
 
     /* ---- レベル ---- */
     LINES_PER_LEVEL: 10,
