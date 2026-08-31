@@ -186,7 +186,7 @@
     if (!G.piece || G.phase !== 'PLAYING') return;
     var from = G.piece.rot;
     var to = (from + dir + 4) % 4;
-    var kicks = P.kicksFor(G.piece.type, from, to);
+    var kicks = P.kicksFor(G.piece.type);
     for (var i = 0; i < kicks.length; i++) {
       var nx = G.piece.x + kicks[i][0];
       var ny = G.piece.y + kicks[i][1];
@@ -303,7 +303,7 @@
       if (G.riseTimer > G.riseInterval) G.riseTimer = G.riseInterval;
     }
 
-    /* --- 消去して詰める（標準テトリスと同じ） --- */
+    /* --- 消去して詰める --- */
     var survivors = [];
     G.lastCells.forEach(function (p) {
       if (doomed[p.r]) return;                                  // 消えた行のセルは消滅

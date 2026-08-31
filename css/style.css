@@ -68,7 +68,10 @@ body {
   background-clip: text;
   color: transparent;
 }
-.logo span { opacity: 0.75; }
+/* opacity を使うと span が独立した合成レイヤーになり、親の background-clip: text が
+   効かなくなって color: transparent のまま描かれてしまう（＝RISE が消える）。
+   透明度ではなく、太さと字間で「BLOCK」との差をつける。 */
+.logo span { margin-left: 0.28em; font-weight: 500; }
 
 .topbar-actions { display: flex; gap: 8px; }
 

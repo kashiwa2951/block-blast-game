@@ -7,8 +7,8 @@
 
   var BB = global.BB = global.BB || {};
 
-  var COLS = 10;            // 盤面の横マス数
-  var VISIBLE_ROWS = 20;    // 画面に見える縦マス数
+  var COLS = 9;             // 盤面の横マス数
+  var VISIBLE_ROWS = 22;    // 画面に見える縦マス数（せり上がりぶん縦に長めに取る）
   var BUFFER_ROWS = 2;      // 天井の上に隠してある予備行（ピース出現用）
 
   BB.Config = {
@@ -47,26 +47,30 @@
     RISE_SAME_HOLE_MAX: 3,  // 同（最大）
 
     /* ---- レベル ---- */
-    LINES_PER_LEVEL: 10,
+    LINES_PER_LEVEL: 12,
 
-    /* ---- スコア ---- */
-    SCORE_LINES: { 1: 100, 2: 300, 3: 500, 4: 800 },
-    SCORE_COMBO: 50,        // × コンボ数 × レベル
-    SCORE_SOFT: 1,          // ソフトドロップ 1マスあたり
-    SCORE_HARD: 2,          // ハードドロップ 1マスあたり
+    /* ---- スコア ----
+     * まとめ消しを強めに優遇する配点。1→4 ラインで伸び方が加速します。 */
+    SCORE_LINES: { 1: 120, 2: 340, 3: 700, 4: 1400 },
+    SCORE_COMBO: 60,        // × コンボ数 × レベル
+    SCORE_SOFT: 2,          // ソフトドロップ 1マスあたり
+    SCORE_HARD: 4,          // ハードドロップ 1マスあたり
     CHAIN_MULT_BASE: 1.0,   // 1連鎖目の倍率
     CHAIN_MULT_STEP: 0.5,   // 連鎖が1増えるごとの加算（2連鎖=1.5, 3連鎖=2.0 ...）
 
-    /* ---- 配色（Block Blast 風の明るいブロック） ---- */
+    /* ---- 配色（BLOCK RISE 独自パレット） ----
+     * 7 色を色相環にほぼ均等に散らし、隣り合う形どうしが見分けやすいようにしています。
+     * せり上がりブロック（G）だけは彩度を落とした暖色グレーで、
+     * 自分で積んだブロックとひと目で区別できます。 */
     COLORS: {
-      I: { base: '#22d3ee', light: '#a5f3fc', dark: '#0b7285' },
-      O: { base: '#fbbf24', light: '#fde68a', dark: '#a45c09' },
-      T: { base: '#c084fc', light: '#ecd9ff', dark: '#6d28d9' },
-      S: { base: '#4ade80', light: '#c3f7d3', dark: '#14713b' },
-      Z: { base: '#fb7185', light: '#ffd0d8', dark: '#b01340' },
-      J: { base: '#60a5fa', light: '#c7dcff', dark: '#1b4fc4' },
-      L: { base: '#fb923c', light: '#ffdcb8', dark: '#b4460d' },
-      G: { base: '#64748b', light: '#9aa8bf', dark: '#2b3546' }  // せり上がりブロック
+      I: { base: '#e879f9', light: '#f8ccff', dark: '#86198f' },
+      O: { base: '#38bdf8', light: '#bae6fd', dark: '#075985' },
+      T: { base: '#f43f5e', light: '#fecdd3', dark: '#9f1239' },
+      S: { base: '#f59e0b', light: '#fde3a7', dark: '#92400e' },
+      Z: { base: '#818cf8', light: '#cdd3fe', dark: '#3730a3' },
+      J: { base: '#a3e635', light: '#e0f7a8', dark: '#4d7c0f' },
+      L: { base: '#10b981', light: '#8fecd0', dark: '#065f46' },
+      G: { base: '#8b8178', light: '#b8afa5', dark: '#463f38' }  // せり上がりブロック
     },
 
     /* ---- localStorage キー ---- */

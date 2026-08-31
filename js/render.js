@@ -30,7 +30,7 @@
     return C.COLORS[key] || C.COLORS.G;
   }
 
-  /* Block Blast 風の、角丸＋グラデーション＋ハイライトのブロック */
+  /* 角丸＋グラデーション＋上面ハイライトのブロック */
   function drawBlock(ctx, px, py, s, key, alpha, scale) {
     var col = colorOf(key);
     ctx.save();

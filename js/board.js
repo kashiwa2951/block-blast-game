@@ -74,7 +74,7 @@
     return out;
   };
 
-  /* そろった行を削除し、上の行を下へ詰める（標準テトリスと同じ） */
+  /* そろった行を削除し、上の行を下へ詰める */
   Board.prototype.clearRows = function (rowList) {
     var doomed = {};
     rowList.forEach(function (r) { doomed[r] = true; });
