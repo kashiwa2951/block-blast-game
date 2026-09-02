@@ -39,7 +39,7 @@
     switch (k) {
       case 'ArrowLeft':  state.left = true; return;
       case 'ArrowRight': state.right = true; return;
-      case 'ArrowDown':  state.softDrop = true; return;
+      case 'ArrowDown':  fire('softStep'); state.softDrop = true; return;
       case 'ArrowUp':    fire('rotateCW'); return;
       case ' ':
       case 'Spacebar':   fire('hardDrop'); return;
@@ -117,7 +117,7 @@
         id: e.pointerId,
         x0: e.clientX, y0: e.clientY,
         lastX: e.clientX, lastY: e.clientY,
-        accX: 0, maxDist: 0, t0: performance.now(),
+        movedX: 0, maxDist: 0, t0: performance.now(),
         movedCells: 0, softing: false
       };
     });
@@ -127,29 +127,33 @@
       e.preventDefault();
 
       var cellSize = BB.Render.metrics().cell;
-      var stepX = Math.max(14, cellSize * 0.7);
+      var stepX = Math.max(C.DRAG_STEP_MIN, cellSize * C.DRAG_STEP_RATIO);
+      var dead = Math.max(C.DRAG_DEADZONE_MIN, cellSize * C.DRAG_DEADZONE_RATIO);
 
-      var dx = e.clientX - touch.lastX;
-      var dy = e.clientY - touch.lastY;
       touch.lastX = e.clientX;
       touch.lastY = e.clientY;
 
       var totX = e.clientX - touch.x0, totY = e.clientY - touch.y0;
       touch.maxDist = Math.max(touch.maxDist, Math.hypot(totX, totY));
 
-      touch.accX += dx;
+      // 横移動は、差分を積み上げるのではなく「指の総移動量」から位置を決める。
+      // 指を戻せばピースも戻るので、置く直前の微調整がしやすい。
+      // はじめの dead ぶんは遊びとして無視し、わずかな指のブレでは動かないようにする。
+      var effX = 0;
+      if (totX > dead) effX = totX - dead;
+      else if (totX < -dead) effX = totX + dead;
+      var wantX = (effX >= 0) ? Math.floor(effX / stepX) : Math.ceil(effX / stepX);
+
       var guard = 0;
-      while (Math.abs(touch.accX) >= stepX && guard++ < 10) {
-        if (touch.accX > 0) { touch.accX -= stepX; fire('moveRight'); }
-        else { touch.accX += stepX; fire('moveLeft'); }
-        touch.movedCells++;
-      }
+      while (touch.movedX < wantX && guard++ < 12) { fire('moveRight'); touch.movedX++; touch.movedCells++; }
+      while (touch.movedX > wantX && guard++ < 12) { fire('moveLeft'); touch.movedX--; touch.movedCells++; }
 
       // ゆっくり下へ引っ張っている間はソフトドロップ
       var softWanted = totY > cellSize * 0.75 && Math.abs(totY) > Math.abs(totX);
       if (softWanted !== touch.softing) {
         touch.softing = softWanted;
         state.softDrop = softWanted;
+        if (softWanted) fire('softStep');   // 効いたことがすぐ分かるよう、まず 1 マス落とす
       }
     }, { passive: false });
 
@@ -191,7 +195,12 @@
 
       if (a === 'left') state.left = true;
       else if (a === 'right') state.right = true;
-      else if (a === 'soft') state.softDrop = true;
+      else if (a === 'soft') {
+        // 短いタップでも必ず 1 マス落ちるようにしてから、押しっぱなしの連続落下に入る。
+        // これがないと、タップの長さ（約 0.1 秒）では 1 マスも落ちず、無反応に見える。
+        fire('softStep');
+        state.softDrop = true;
+      }
       else if (a === 'rotate') fire('rotateCW');
       else if (a === 'hard') fire('hardDrop');
       else if (a === 'hold') fire('hold');

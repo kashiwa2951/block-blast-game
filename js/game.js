@@ -201,6 +201,17 @@
     }
   }
 
+  /* ソフトドロップを押した瞬間に 1 マスだけ落とす。
+   * 押しっぱなしの連続落下は自然落下の処理側でやるので、ここは「押した手応え」担当。
+   * これがないと、短いタップでは連続落下が 1 回も回らず、無反応に見えてしまう。 */
+  function softStep() {
+    if (!G.piece || G.phase !== 'PLAYING') return;
+    if (tryMove(0, 1)) {
+      G.score += C.SCORE_SOFT;
+      G.gravityTimer = 0;   // 直後にもう 1 マス落ちないよう、間隔を測り直す
+    }
+  }
+
   function hardDrop() {
     if (!G.piece || G.phase !== 'PLAYING') return;
     var y = G.board.dropY(G.piece);
@@ -557,6 +568,7 @@
     moveRight: function () { moveSide(1); },
     rotateCW:  function () { rotate(1); },
     rotateCCW: function () { rotate(-1); },
+    softStep:  softStep,
     hardDrop:  hardDrop,
     hold:      holdPiece,
     pause:     function () { if (!el.help.hidden) { showHelp(false); return; } togglePause(); },
